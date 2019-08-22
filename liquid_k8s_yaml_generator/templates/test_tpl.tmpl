@@ -1,0 +1,81 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ image_name }}
+  namespace: default
+spec:
+  replicas: {{ replicas|default(2) }}
+  selector:
+    matchLabels:
+      app: {{ image_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ image_name }}
+    spec:
+      containers:
+        - name: {{ image_name }}
+          image: '{{ remote_image_name }}'
+          env:
+            ######### 配置 环境变量 ###########
+            {% if env_items %}
+            {% for k,v in env_items.items() %}
+            - name: {{ k }}
+              value: {{ v }}
+            {% endfor %}
+            {% endif  %}
+            - name: aliyun_logs_{{ image_name }}-stdout
+              value: stdout
+            - name: aliyun_logs_{{ image_name }}-log
+              value: {{ log_path }}
+          ports:
+            - containerPort: {{ port }}
+  ###############################
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ image_name }}-svc
+  labels:
+    app: {{ image_name }}
+    service: {{ image_name }}
+spec:
+  ports:
+    - port: {{ port }}
+      name: {{ image_name }}-svc
+  selector:
+    app: {{ image_name }}
+  type: LoadBalancer
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ image_name }}-vs
+  namespace: default
+spec:
+  hosts:
+    - {{ image_name }}-vs-svc
+  http:
+    - route:
+        - destination:
+            host: {{ image_name }}-svc
+            subset: {{ image_name }}-svc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ image_name }}-vs-svc
+  labels:
+    app: {{ image_name }}-vs
+    service: {{ image_name }}-vs
+spec:
+  ports:
+    - port: {{ port }}
+      name: {{ image_name }}-vs-svc
+      targetPort: {{ port }}
+  selector:
+    app: {{ image_name }}
+  type: LoadBalancer
