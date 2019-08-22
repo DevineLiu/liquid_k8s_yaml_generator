@@ -36,6 +36,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  {% if address_type %}
+  annotations:
+    service.beta.kubernetes.io/alicloud-loadbalancer-address-type: "{{ address_type  }}"
+    service.beta.kubernetes.io/alicloud-loadbalancer-network-type: "vpc"
+  {% endif  %}
   name: {{ image_name }}-svc
   labels:
     app: {{ image_name }}
