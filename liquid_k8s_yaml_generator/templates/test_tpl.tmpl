@@ -33,27 +33,6 @@ spec:
   ###############################
 
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  {% if address_type %}
-  annotations:
-    service.beta.kubernetes.io/alicloud-loadbalancer-address-type: "{{ address_type  }}"
-    service.beta.kubernetes.io/alicloud-loadbalancer-network-type: "vpc"
-  {% endif  %}
-  name: {{ image_name }}-svc
-  labels:
-    app: {{ image_name }}
-    service: {{ image_name }}
-spec:
-  ports:
-    - port: {{ port }}
-      name: {{ image_name }}-svc
-  selector:
-    app: {{ image_name }}
-  type: LoadBalancer
-
----
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -65,13 +44,17 @@ spec:
   http:
     - route:
         - destination:
-            host: {{ image_name }}-svc
-            subset: {{ image_name }}-svc
+            host: {{ image_name }}-vs-svc
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
+  {% if address_type %}
+  annotations:
+    service.beta.kubernetes.io/alicloud-loadbalancer-address-type: "{{ address_type  }}"
+    service.beta.kubernetes.io/alicloud-loadbalancer-network-type: "vpc"
+  {% endif  %}
   name: {{ image_name }}-vs-svc
   labels:
     app: {{ image_name }}-vs

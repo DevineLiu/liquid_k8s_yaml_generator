@@ -8,7 +8,8 @@ replicas=2,
 remote_image_name="ubuntu:latest" , # 镜像地址
 port = 80, #应用开放的端口
 env_items = {"KEY":"vaule"}, #环境变量
-log_path = "/log/*log"  #sls 采集日志的地址
+log_path = "/log/*log" , #sls 采集日志的地址
+address_type ="sd"
 )
 
 print(yaml_fb)
